@@ -1,0 +1,30 @@
+volumes:
+  pg-data:
+
+services:
+  todo-app:
+    build: .
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      database:
+        condition: service_healthy
+        restart: true
+  database:
+    image: postgres:alpine
+    ports:
+      - 4532:4532
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
